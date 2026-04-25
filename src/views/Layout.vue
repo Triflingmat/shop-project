@@ -2,7 +2,7 @@
   <el-container style="height: 100vh;background-color: #f5f5f5;">
     <el-header  class="divheader">
       <div style="display: flex;flex-direction: row;align-items: center;">
-        <h1 style="margin-left: 10px;">商品后台管理系统</h1>
+        <h1 style="margin-left: 10px;">商城后台管理系统</h1>
         <el-button :icon="Fold" @click="isCollapse=!isCollapse" class="btn-Fold" plain />
       </div>
       <h3>欢迎使用商城后台管理系统，{{ userStore.power === 1?"超级管理员":"管理员" }}</h3>
