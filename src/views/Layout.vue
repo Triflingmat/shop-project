@@ -5,7 +5,7 @@
         <h1 style="margin-left: 10px;">商品后台管理系统</h1>
         <el-button :icon="Fold" @click="isCollapse=!isCollapse" class="btn-Fold" plain />
       </div>
-      <h3>欢迎使用商品后台管理系统，{{ userStore.power === 1?"超级管理员":"管理员" }}</h3>
+      <h3>欢迎使用商城后台管理系统，{{ userStore.power === 1?"超级管理员":"管理员" }}</h3>
       <div>
         <el-dropdown class="dropdown" @command="handleCommand">
           <span>
