@@ -19,24 +19,24 @@
 
 ### 登录页面
 
-![登录页面](assets/images/1.png)
+![登录页面](./src/assets/images/1.png)
 
 ### 主界面
 
-![主界面](assets/images/2.png)
+![主界面](./src/assets/images/2.png)
 
 ### 用户管理
 
-![用户管理](assets/images/3.png)
+![用户管理](./src/assets/images/3.png)
 
 ### 订单管理
 
-![订单管理](assets/images/4.png)
-![订单详情](assets/images/6.png)
+![订单管理](./src/assets/images/4.png)
+![订单详情](./src/assets/images/6.png)
 
 ### 商品管理
 
-![商品管理](assets/images/5.png)
+![商品管理](./src/assets/images/5.png)
 
 ## 功能模块
 
