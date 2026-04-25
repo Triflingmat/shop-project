@@ -73,7 +73,7 @@
 │   └── main.ts        # 入口文件
 ```
 
-##后端项目地址
+## 后端项目地址
 
 - 后端项目地址：`https://github.com/Triflingmat/shop`
 
