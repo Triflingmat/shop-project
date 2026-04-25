@@ -90,6 +90,14 @@ const request = axios.create({
 });
 ```
 
+## 使用方法
+
+1. 克隆项目到本地
+2. 安装依赖
+3. 启动后端项目
+4. 运行项目
+5. 访问 `http://localhost:5173` 查看项目效果
+
 ## Project Setup
 
 ```sh
