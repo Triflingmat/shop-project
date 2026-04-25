@@ -43,7 +43,7 @@
 
 ## 项目结构
 
-````
+```
 ├── src/
 │   ├── api/           # API 接口定义
 │   │   ├── aftersale.ts     # 售后相关接口
@@ -71,12 +71,11 @@
 │   │   └── userAuth/      # 用户认证管理
 │   ├── App.vue        # 根组件
 │   └── main.ts        # 入口文件
+```
 
-### 4. 生产环境构建
+##后端项目地址
 
-```bash
-npm run build
-````
+- 后端项目地址：`https://github.com/Triflingmat/shop`
 
 ## 后端 API 配置
 
