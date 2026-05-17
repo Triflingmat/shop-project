@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// App 根组件 —— 直接渲染路由视图（路由自动决定使用 Layout 还是独立页面）
 </script>
 
 <template>

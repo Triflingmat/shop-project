@@ -2,7 +2,7 @@ import axios from 'axios'
 import { parseToken } from '@/utils/token'
 import type { User } from '@/types'
 
-const BASE_URL = 'http://localhost:8082/api'
+const BASE_URL = 'http://triflingmat.icu:8082/api'
 
 /**
  * 用户登录

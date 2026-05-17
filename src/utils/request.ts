@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const VITE_API_URL = 'http://localhost:8082'
+const VITE_API_URL = 'http://triflingmat.icu:8082'
 
 // ========== 认证请求实例（需要登录的接口使用） ==========
 const request = axios.create({

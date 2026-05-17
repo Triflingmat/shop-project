@@ -2,7 +2,7 @@ import axios from 'axios'
 import { get, post, put, del } from '@/utils/request'
 import type { User, PageResult } from '@/types'
 
-const BASE_URL = 'http://localhost:8082/api'
+const BASE_URL = 'http://triflingmat.icu:8082/api'
 
 /** 获取用户列表 */
 export const getUserList = (params: { pageNum: number; pageSize: number; mode?: number }) =>
