@@ -1,23 +1,39 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
+import { ref } from 'vue'
+import { useIntersectionObserver } from '@vueuse/core'
 import type { Goods } from '@/types'
 
 defineProps<{
     goods: Goods
 }>()
 
-const router = useRouter()
+// 图片懒加载：进入视口后才加载
+const imgRef = ref<HTMLElement | null>(null)
+const isLoaded = ref(false)
 
-const goDetail = () => {
-    router.push({ name: 'GoodsDetail', params: { id: router.currentRoute.value.params.id } })
-    // 由于商品卡片点击需要跳转到该商品详情
-}
+useIntersectionObserver(
+    imgRef,
+    (entries) => {
+        if (entries[0]?.isIntersecting) {
+            isLoaded.value = true
+        }
+    },
+    { rootMargin: '200px' }
+)
 </script>
 
 <template>
     <div class="goods-card" @click="$router.push(`/goods/detail/${goods.id}`)">
         <div class="card-img">
-            <img :src="goods.goods_img" :alt="goods.name" />
+            <img
+                v-if="isLoaded"
+                :src="goods.goods_img"
+                :alt="goods.name"
+                loading="lazy"
+            />
+            <div v-else class="img-placeholder" ref="imgRef">
+                <span>📷</span>
+            </div>
             <div v-if="!goods.is_on_sale" class="off-sale-mask">已下架</div>
         </div>
         <div class="card-info">
@@ -53,6 +69,15 @@ const goDetail = () => {
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+.img-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    background: linear-gradient(135deg, #f5f5f5, #e8e8e8);
 }
 .off-sale-mask {
     position: absolute;

@@ -1,79 +1,118 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useInfiniteScroll } from '@vueuse/core'
 import { getGoodsList } from '@/api/goods'
 import { getCategoryList } from '@/api/category'
 import GoodsCard from '@/components/GoodsCard.vue'
-import type { Goods, Category } from '@/types'
+import type { Category } from '@/types'
+import type { Goods } from '@/types'
 
 const route = useRoute()
-const goods = ref<Goods[]>([])
+const goodsList = ref<Goods[]>([])
 const categories = ref<Category[]>([])
 const total = ref(0)
 const pageNum = ref(1)
 const pageSize = 12
 const keyword = ref('')
 const activeCategory = ref('')
+const loading = ref(false)
+const noMore = ref(false)
+
+// 是否还有更多数据
+const hasMore = computed(() => goodsList.value.length < total.value)
+
+// 重置并重新加载
+const resetAndLoad = () => {
+    pageNum.value = 1
+    goodsList.value = []
+    total.value = 0
+    noMore.value = false
+    loadGoods()
+}
 
 onMounted(() => {
     keyword.value = (route.query.keyword as string) || ''
     activeCategory.value = (route.query.category as string) || ''
-    fetchGoods()
     fetchCategories()
+    resetAndLoad()
 })
 
+// 监听路由 query 变化，重新加载
 watch(
-    () => route.query,
-    (query) => {
-        keyword.value = (query.keyword as string) || ''
-        activeCategory.value = (query.category as string) || ''
-        pageNum.value = 1
-        fetchGoods()
+    () => [route.query.keyword, route.query.category],
+    () => {
+        keyword.value = (route.query.keyword as string) || ''
+        activeCategory.value = (route.query.category as string) || ''
+        resetAndLoad()
     }
 )
-
-const fetchGoods = async () => {
-    try {
-        // 一次性获取全量商品，客户端做分类筛选 + 分页
-        const res = await getGoodsList({
-            pageNum: 1,
-            pageSize: 999,
-            name: keyword.value || undefined,
-        })
-        let list = res.list || []
-
-        // 前端按分类名筛选
-        if (activeCategory.value) {
-            const cat = categories.value.find((c) => c.name === activeCategory.value)
-            if (cat) {
-                list = list.filter((g) => g.category_id === cat.id)
-            }
-        }
-        // 只展示上架商品
-        list = list.filter((g) => Number(g.is_on_sale) === 1)
-
-        // 基于筛选后的数据重新计算总数 + 客户端分页
-        total.value = list.length
-        const start = (pageNum.value - 1) * pageSize
-        goods.value = list.slice(start, start + pageSize)
-    } catch {
-        // ignore
-    }
-}
 
 const fetchCategories = async () => {
     try {
         const res = await getCategoryList()
         categories.value = res.list || []
+    } catch { /* ignore */ }
+}
+
+/** 加载一页数据（追加模式） */
+const loadGoods = async () => {
+    if (loading.value || noMore.value) return
+    loading.value = true
+    try {
+        let mode = 0
+        if (activeCategory.value) {
+            const cat = categories.value.find((c) => c.name === activeCategory.value)
+            if (cat) mode = cat.id
+        }
+
+        const res = await getGoodsList({
+            pageNum: pageNum.value,
+            pageSize,
+            mode,
+            name: keyword.value || '',
+        })
+
+        const onSale = (res.list || []).filter((g: Goods) => Number(g.is_on_sale) === 1)
+
+        // 如果返回空列表，说明没有更多数据了
+        if (onSale.length === 0) {
+            noMore.value = true
+            if (pageNum.value === 1) goodsList.value = []
+        } else if (pageNum.value === 1) {
+            goodsList.value = onSale
+        } else {
+            goodsList.value.push(...onSale)
+        }
+
+        total.value = res.total || 0
+
+        // 已加载数量 >= 总数时，标记没有更多
+        if (goodsList.value.length >= total.value || onSale.length === 0) {
+            noMore.value = true
+        } else {
+            pageNum.value++
+        }
     } catch {
-        // ignore
+        // 请求失败时停止继续加载
+        noMore.value = true
+        if (pageNum.value === 1) goodsList.value = []
+    } finally {
+        loading.value = false
     }
 }
 
-const onPageChange = (page: number) => {
-    pageNum.value = page
-    fetchGoods()
-}
+// ========== 无限滚动 ==========
+// 距离底部 200px 时自动加载下一页
+useInfiniteScroll(
+    document,
+    () => {
+        if (!loading.value && hasMore.value) {
+            loadGoods()
+        }
+    },
+    { distance: 200 }
+)
 </script>
 
 <template>
@@ -110,19 +149,24 @@ const onPageChange = (page: number) => {
                 <div class="toolbar">
                     <span class="total">共 {{ total }} 件商品</span>
                 </div>
-                <div class="goods-grid" v-if="goods.length">
-                    <GoodsCard v-for="g in goods" :key="g.id" :goods="g" />
+                <div class="goods-grid" v-if="goodsList.length">
+                    <GoodsCard v-for="g in goodsList" :key="g.id" :goods="g" />
                 </div>
-                <div v-else class="empty">暂无商品</div>
-                <div class="pagination" v-if="total > pageSize">
-                    <el-pagination
-                        background
-                        layout="prev, pager, next"
-                        :total="total"
-                        :page-size="pageSize"
-                        :current-page="pageNum"
-                        @current-change="onPageChange"
-                    />
+                <div v-else-if="!loading" class="empty">
+                    <template v-if="keyword">
+                        未找到与"{{ keyword }}"相关的商品
+                    </template>
+                    <template v-else>
+                        暂无商品
+                    </template>
+                </div>
+                <!-- 加载提示 -->
+                <div v-if="loading" class="load-more">
+                    <span class="spinner" />
+                    <span>加载中...</span>
+                </div>
+                <div v-else-if="noMore && goodsList.length > 0" class="load-more no-more">
+                    — 已经到底了 —
                 </div>
             </div>
         </div>
@@ -151,29 +195,65 @@ const onPageChange = (page: number) => {
 }
 .sidebar li:hover { background: #fff0f0; color: #e4393c; }
 .sidebar li.active { background: #e4393c; color: #fff; }
-.main { flex: 1; }
+.main { flex: 1; min-height: 400px; }
 .toolbar {
-    background: #fff;
-    padding: 12px 16px;
-    border-radius: 8px;
-    margin-bottom: 16px;
     display: flex;
     align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: #fff;
+    border-radius: 8px;
 }
-.total { font-size: 13px; color: #999; }
+.total { font-size: 14px; color: #666; }
+.keyword-hint { font-size: 14px; color: #e4393c; }
 .goods-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 16px;
 }
-.empty { text-align: center; padding: 60px; color: #999; background: #fff; border-radius: 8px; }
-.pagination { margin-top: 20px; display: flex; justify-content: center; }
+.empty {
+    text-align: center;
+    padding: 80px 0;
+    color: #999;
+    font-size: 15px;
+    background: #fff;
+    border-radius: 8px;
+}
+
+/* 加载更多 */
+.load-more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 24px;
+    color: #999;
+    font-size: 14px;
+}
+.spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #e0e0e0;
+    border-top-color: #e4393c;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+.no-more {
+    color: #ccc;
+    font-size: 13px;
+}
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
 
 @media (max-width: 900px) {
     .goods-grid { grid-template-columns: repeat(2, 1fr); }
-    .sidebar { display: none; }
 }
 @media (max-width: 600px) {
+    .content { flex-direction: column; }
+    .sidebar { width: 100%; }
     .goods-grid { grid-template-columns: 1fr; }
 }
 </style>

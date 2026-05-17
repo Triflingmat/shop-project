@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getGoodsList } from '@/api/goods'
+import { getGoodsDetail } from '@/api/goods'
 import { useCartStore } from '@/stores/cart'
 import { useUserStore } from '@/stores/user'
 import QuantitySelector from '@/components/QuantitySelector.vue'
@@ -19,8 +19,7 @@ const quantity = ref(1)
 onMounted(async () => {
     const id = Number(route.params.id)
     try {
-        const res = await getGoodsList({ pageNum: 1, pageSize: 100 })
-        goods.value = (res.list || []).find((g) => g.id === id) || null
+        goods.value = await getGoodsDetail(id)
     } catch {
         // ignore
     }

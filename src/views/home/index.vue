@@ -4,6 +4,10 @@ import { getGoodsList } from '@/api/goods'
 import { getCategoryList } from '@/api/category'
 import GoodsCard from '@/components/GoodsCard.vue'
 import type { Goods, Category } from '@/types'
+import {
+    Iphone, Monitor, Headset, Camera, Grid, Food,
+    School, Notebook, Files, Star
+} from '@element-plus/icons-vue'
 import img1 from '@/assets/image/1.jpg'
 import img2 from '@/assets/image/2.jpg'
 import img3 from '@/assets/image/3.jpg'
@@ -32,6 +36,30 @@ onMounted(async () => {
         // 静默处理
     }
 })
+
+/** 根据分类名称返回对应图标组件 */
+const categoryIcons: Record<string, any> = {
+    '手机': Iphone,
+    '笔记本': Notebook,
+    '平板': Notebook,
+    '耳机': Headset,
+    '相机': Camera,
+    '显示器': Monitor,
+    '电脑配件': Files,
+    '外设': Files,
+    '食物': Food,
+    '测试': School,
+}
+
+const getCategoryIcon = (name: string) => {
+    // 模糊匹配
+    for (const key of Object.keys(categoryIcons)) {
+        if (name.includes(key) || key.includes(name)) {
+            return categoryIcons[key]
+        }
+    }
+    return Grid // 默认图标
+}
 </script>
 
 <template>
@@ -55,7 +83,11 @@ onMounted(async () => {
                     class="category-item"
                     @click="$router.push({ name: 'GoodsList', query: { category: cat.name } })"
                 >
-                    <div class="cat-icon">📦</div>
+                    <div class="cat-icon">
+                        <el-icon :size="28">
+                            <component :is="getCategoryIcon(cat.name)" />
+                        </el-icon>
+                    </div>
                     <span>{{ cat.name }}</span>
                 </div>
             </div>

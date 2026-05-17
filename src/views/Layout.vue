@@ -1,17 +1,27 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowDown, Search, ShoppingCart, User } from '@element-plus/icons-vue'
+import { useScroll } from '@vueuse/core'
+import { ArrowDown, ArrowUp, Search, ShoppingCart, User } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useCartStore } from '@/stores/cart'
 import { useCategoryStore } from '@/stores/category'
 import { ElMessage } from 'element-plus'
+import AiChat from '@/components/AiChat.vue'
 
 const searchKey = ref('')
 const router = useRouter()
 const userStore = useUserStore()
 const cartStore = useCartStore()
 const categoryStore = useCategoryStore()
+
+// 回到顶部悬浮球 — 滚动超过 300px 时显示
+const { y: scrollY } = useScroll(document)
+const showBackTop = computed(() => scrollY.value > 300)
+
+const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+}
 
 onMounted(() => {
     // 始终获取分类（公开接口，无需登录）
@@ -152,6 +162,18 @@ const handleLogout = () => {
                 <p>© 2026 优选商城 版权所有</p>
             </div>
         </footer>
+        <!-- 回到顶部悬浮球 -->
+        <transition name="fade">
+            <div
+                v-show="showBackTop"
+                class="back-top-btn"
+                @click="scrollToTop"
+                title="回到顶部"
+            >
+                <el-icon :size="20"><ArrowUp /></el-icon>
+            </div>
+        </transition>
+        <AiChat />
     </div>
 </template>
 
@@ -301,5 +323,37 @@ const handleLogout = () => {
     text-align: center;
     padding: 16px;
     font-size: 12px;
+}
+/* === 回到顶部悬浮球 === */
+.back-top-btn {
+    position: fixed;
+    right: 28px;
+    bottom: 28px;
+    z-index: 9996;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: #e4393c;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(228, 57, 60, 0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.back-top-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 28px rgba(228, 57, 60, 0.55);
+}
+
+/* 淡入淡出动画 */
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
 }
 </style>

@@ -1,17 +1,17 @@
 import { publicGet, get, post, put, del } from '@/utils/request'
 import type { Goods, PageResult } from '@/types'
 
-/** 获取商品列表（公开，无需登录） */
+/** 获取商品列表（公开，支持按名称/分类搜索） */
 export const getGoodsList = (params: {
     pageNum: number
     pageSize: number
-    mode?: number
-    name?: string
+    mode?: number       // category_id
+    name?: string       // 模糊搜索名称
 }) => publicGet<PageResult<Goods>>('/goods/list', params)
 
-/** 获取单个商品详情 */
+/** 获取单个商品详情（需登录） */
 export const getGoodsDetail = (id: number) =>
-    get<PageResult<Goods>>('/goods/list', { pageNum: 1, pageSize: 1, id })
+    get<Goods>('/goods/detail/' + id)
 
 /** 添加商品 */
 export const addGoods = (data: Partial<Goods>) =>
